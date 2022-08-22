@@ -1,0 +1,10 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.1.2
+  SuggestExtensions: false
+
+  Exclude: 
+    - 'bin/**'
+
+Style/Documentation:
+  Enabled: false
