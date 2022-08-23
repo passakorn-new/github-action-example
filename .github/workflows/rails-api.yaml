@@ -2,8 +2,7 @@ name: Rails Unit Tests
 
 on:
   push:
-    paths:
-      - 'rails-api/**'
+    branches: [ main ]
 
 jobs:
   build:
