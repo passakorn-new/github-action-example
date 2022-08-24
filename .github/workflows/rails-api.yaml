@@ -1,4 +1,24 @@
-name: Rails Unit Tests
+# name: Rails Unit Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+
+# jobs:
+#   build:
+
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v3
+
+#       - name: Set up Ruby
+#         uses: ruby/setup-ruby@v1
+#         with:
+#           ruby-version: '3.1.2'
+#           bundler-cache: true
+
+name: Rails-ci
 
 on:
   push:
@@ -6,22 +26,16 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres:11
-        ports: ['5432:5432']
+        image: postgres:11.6-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_DB: github-workflow-action
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - uses: actions/checkout@v3
@@ -29,6 +43,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.1.2'
+          ruby-version: '3.1.x'
           bundler-cache: true
-          
+        run: bundle exec rails db:prepare
+        run: bundle exec rails test
