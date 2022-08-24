@@ -38,14 +38,5 @@ jobs:
         bundle install --jobs 4 --retry 3
         bundle exec rails db:create
         bundle exec rails db:migrate
-        
-    - name: Run Rubocop
-      run: |
-        cd rails-api
         bundle exec rails test
-        bundle exec rails rubocop
 
-    - name: Run Test
-      run: |
-        cd rails-api
-        bundle exec rails test
