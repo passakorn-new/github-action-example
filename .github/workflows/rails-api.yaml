@@ -25,12 +25,7 @@ jobs:
       with:
         ruby-version: 3.1.2
 
-
-    - name: Run Rubocop
-      run: |
-        cd rails-api
-        bundle exec rubocop
-    - name: Run Test
+    - name: Install Gem 
       env:
         PGHOST: 127.0.0.1
         PGUSER: postgres
@@ -41,6 +36,16 @@ jobs:
         cd rails-api
         gem install bundler
         bundle install --jobs 4 --retry 3
+        
+    - name: Run Rubocop
+      run: |
+        cd rails-api
         bundle exec rails db:create
         bundle exec rails db:migrate
+        bundle exec rails test
+        bundle exec rails rubocop
+
+    - name: Run Test
+      run: |
+        cd rails-api
         bundle exec rails test
