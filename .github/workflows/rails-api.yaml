@@ -67,5 +67,5 @@ jobs:
     - name: Verify Build
       run: |
         cd rails-api
-        docker build -t .
+        docker build -t api:lastest .
 
