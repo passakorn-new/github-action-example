@@ -24,6 +24,7 @@ jobs:
       uses: actions/setup-ruby@v1
       with:
         ruby-version: 3.1.2
+        bundler-cache: true
 
     - name: Bundle & Prepare database
       env:
