@@ -71,3 +71,6 @@ jobs:
 
   build_web:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: svelte
