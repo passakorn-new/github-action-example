@@ -69,32 +69,5 @@ jobs:
       - name: Verify Build
         run: docker build -t api:lastest .
 
-  # build_web:
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: svelte
-
-  #     - name: Get pnpm store directory
-  #       id: pnpm-cache
-  #       run: |
-  #         echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
-
-  #     - uses: actions/cache@v3
-  #       name: Setup pnpm cache
-  #       with:
-  #         path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
-  #         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-pnpm-store-
-
-  #        - name: Install dependencies
-
-  #       run: pnpm install
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18
-  #     - run: pnpm install
-  #     - run: pnpm test
+  build_web:
+    runs-on: ubuntu-latest
