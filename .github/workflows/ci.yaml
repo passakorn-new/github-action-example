@@ -1,0 +1,100 @@
+name: Rails-CI
+
+on:
+  push:
+    branches:
+      - "releases-**"
+      - "main"
+  pull_request:
+    types: [assigned, opened, synchronize, reopened]
+    branches: [main, dev]
+
+jobs:
+  build_api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rails-api
+
+    services:
+      db:
+        env:
+          POSTGRES_PASSWORD: password
+        image: postgres:14.5-alpine
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby 3.1.2
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1.2"
+          bundler-cache: true
+
+      - name: Bundle & Prepare database
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: password
+          RAILS_ENV: test
+        run: |
+          sudo apt-get -yqq install libpq-dev
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+          bundle exec rails db:prepare
+
+      - name: Run rubocop
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: password
+          RAILS_ENV: test
+        run: |
+          cd rails-api
+          bundle exec rubocop
+
+      - name: Run tests
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: password
+          RAILS_ENV: test
+        run: bundle exec rails test
+
+      - name: Verify Build
+        run: docker build -t api:lastest .
+
+  build_web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: svelte
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+         - name: Install dependencies
+         
+        run: pnpm install
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: pnpm install
+      - run: pnpm test

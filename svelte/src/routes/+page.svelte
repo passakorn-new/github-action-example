@@ -16,7 +16,8 @@
 			</picture>
 		</span>
 
-		to your new<br /> {import.meta.env.VITE_APP_NAME}
+		to your new<br />
+		{import.meta.env.VITE_APP_NAME}
 	</h1>
 
 	<h2>
