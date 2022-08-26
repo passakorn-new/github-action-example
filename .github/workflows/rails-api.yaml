@@ -1,6 +1,11 @@
-name: Rails Unit Tests
+name: Rails-CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - 'releases**'
+  
+  pull_request:
 
 jobs:
   build:
@@ -58,4 +63,9 @@ jobs:
       run: |
         cd rails-api
         bundle exec rails test
+
+    - name: Verify Build
+      run: |
+        cd rails-api
+        docker build -t .
 
