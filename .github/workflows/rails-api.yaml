@@ -1,9 +1,9 @@
 name: Rails-CI
 
-on:
-  push:
-    branches:
-      - 'releases**'
+on: [push]
+  # push:
+    # branches:
+    #   - 'releases**'
   
   pull_request:
 
