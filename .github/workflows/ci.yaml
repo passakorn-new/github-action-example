@@ -54,9 +54,7 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: password
           RAILS_ENV: test
-        run: |
-          cd rails-api
-          bundle exec rubocop
+        run: bundle exec rubocop
 
       - name: Run tests
         env:
