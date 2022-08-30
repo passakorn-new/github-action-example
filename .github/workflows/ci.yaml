@@ -65,7 +65,7 @@ jobs:
         run: bundle exec rails test
 
       - name: Verify Build docker
-        run: docker build -t api:lastest .
+        run: docker build -t api:latest .
 
       - id: "auth"
         uses: "google-github-actions/auth@v0"
