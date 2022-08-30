@@ -3,8 +3,8 @@ name: CI Rails & Svelte
 on:
   push:
     branches:
-      - "releases-**"
-      - "main"
+      - releases-**
+      - main
   pull_request:
     types: [assigned, opened, synchronize, reopened]
     branches: [main, dev]
@@ -21,7 +21,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: password
         image: postgres:14.5-alpine
-        ports: ["5432:5432"]
+        ports: [5432:5432]
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -33,7 +33,7 @@ jobs:
       - name: Set up Ruby 3.1.2
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.1.2"
+          ruby-version: 3.1.2
           bundler-cache: true
 
       - name: Bundle & Prepare database
@@ -67,13 +67,14 @@ jobs:
       - name: Verify Build docker
         run: docker build -t api:latest .
 
-      - id: "auth"
-        uses: "google-github-actions/auth@v0"
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v0
         with:
           credentials_json: ${{ secrets.SERVICE_ACCOUNT }}
 
-      - name: "Set up Cloud SDK"
-        uses: "google-github-actions/setup-gcloud@v0"
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
 
       - name: Automatic Tagging of Releases
         id: increment-git-tag
@@ -81,16 +82,25 @@ jobs:
           cd ../.github/workflows
           bash ./git_update.sh -v patch
 
-      - name: Push Docker Image to GCR
+      - name: Configure docker for GCP
+        run: gcloud auth configure-docker
+
+      - name: Push to Google Container Registry
         env:
           PROJECT_ID: github-action-361002
           IMAGE_NAME: api
           GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        run: |-
-          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
-          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+        run: docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+      # - name: Push Docker Image to GCR
+      #   env:
+      #     PROJECT_ID: github-action-361002
+      #     IMAGE_NAME: api
+      #     GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+      #   run: |-
+      #     docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+      #     docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+      #     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+      #     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
 
   build_web:
     runs-on: ubuntu-latest
@@ -116,7 +126,7 @@ jobs:
       - name: Get pnpm store directory
         id: pnpm-cache
         run: |
-          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+          echo ::set-output name=pnpm_cache_dir::$(pnpm store path)
 
       - uses: actions/cache@v3
         name: Setup pnpm cache
