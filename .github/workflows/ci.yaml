@@ -5,36 +5,67 @@ on:
     branches:
       - "releases-**"
       - "main"
-      - "dev"
-  # workflow_dispatch:
-  #   inputs:
-  #     version:
-  #       type: choice
-  #       description: Version for increase tag
-  #       required: true
-  #       options:
-  #         - major
-  #         - minor
-  #         - patch
-  #     environment:
-  #       description: Environment to run CD
-  #       type: choice
-  #       required: true
-  #       options:
-  #         - stg
-  #         - prod
+  pull_request:
+    types: [assigned, opened, synchronize, reopened]
+    branches: [main, dev]
 
 jobs:
-  build_api_push_gcr_stg:
-    name: Build and Push to GCP
-    # if: ${{ inputs.environment == 'stg' }}
-    runs-on: ubuntu-lastest
-    env:
-      IMAGE_NAME: api-stg
-      PROJECT_ID: github-action-361002
+  build_api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rails-api
+
+    services:
+      db:
+        env:
+          POSTGRES_PASSWORD: password
+        image: postgres:14.5-alpine
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v2
+      - name: Set up Ruby 3.1.2
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1.2"
+          bundler-cache: true
+
+      - name: Bundle & Prepare database
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: password
+          RAILS_ENV: test
+        run: |
+          sudo apt-get -yqq install libpq-dev
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+          bundle exec rails db:prepare
+
+      - name: Run rubocop
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: password
+          RAILS_ENV: test
+        run: bundle exec rubocop
+
+      - name: Run tests
+        env:
+          PGHOST: 127.0.0.1
+          PGUSER: postgres
+          PGPASSWORD: password
+          RAILS_ENV: test
+        run: bundle exec rails test
+
+      - name: Verify Build docker
+        run: docker build -t api:lastest .
 
       - id: "auth"
         uses: "google-github-actions/auth@v0"
@@ -44,18 +75,58 @@ jobs:
       - name: "Set up Cloud SDK"
         uses: "google-github-actions/setup-gcloud@v0"
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:lastest .
+      - name: Automatic Tagging of Releases
+        id: increment-git-tag
+        run: bash ./scripts/git_update.sh -v patch
 
-      # - name: Automatic Tagging of Releases
-      #   id: increment-git-tag
-      #   run: bash ./scripts/git_update.sh -v ${{ inputs.version }}
+      - name: Push Docker Image to GCR
+        env:
+          IMAGE_NAME: api
+          GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+        run: |-
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
 
-      # - name: Push Docker Image to GCR
-      #   env:
-      #     GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-      #   run: |-
-      #     docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-      #     docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
-      #     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-      #     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+  build_web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: svelte
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.7.0
+
+      - uses: pnpm/action-setup@v2.0.1
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+          pnpm build
+
+      - name: Verify Build docker
+        run: docker build -t web:lastest .
