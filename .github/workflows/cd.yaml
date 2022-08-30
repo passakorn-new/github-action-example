@@ -22,7 +22,7 @@ on:
 jobs:
   build_api_push_gcr_stg:
     name: Build and Push to GCP
-    if: ${{ inputs.environment == 'stg' }}
+    # if: ${{ inputs.environment == 'stg' }}
     runs-on: ubuntu-lastest
     env:
       IMAGE_NAME: api-stg
