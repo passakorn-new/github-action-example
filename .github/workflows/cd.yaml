@@ -24,6 +24,9 @@ jobs:
     name: Build and Push to GCP
     if: ${{ inputs.environment == 'stg' }}
     runs-on: ubuntu-16.04
+    defaults:
+      run:
+        working-directory: rails-api
     env:
       IMAGE_NAME: api-stg
       PROJECT_ID: github-action-361002
@@ -44,7 +47,9 @@ jobs:
 
       - name: Automatic Tagging of Releases
         id: increment-git-tag
-        run: bash ./scripts/git_update.sh -v ${{ inputs.version }}
+        run: |
+          cd ../github/workflows 
+          bash ./scripts/git_update.sh -v ${{ inputs.version }}
 
       - name: Push Docker Image to GCR
         env:
