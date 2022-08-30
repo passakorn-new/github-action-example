@@ -16,19 +16,19 @@ on:
         type: choice
         required: true
         options:
-          - stg
-          - prod
+          - staging
+          - production
 
 jobs:
   build_api_push_gcr_stg:
     name: Build and Push to GCP
-    if: ${{ inputs.environment == 'stg' }}
-    runs-on: ubuntu-16.04
+    if: ${{ inputs.environment == 'staging' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: rails-api
     env:
-      IMAGE_NAME: api-stg
+      IMAGE_NAME: api
       PROJECT_ID: github-action-361002
     steps:
       - name: Checkout
@@ -43,7 +43,7 @@ jobs:
         uses: "google-github-actions/setup-gcloud@v0"
 
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:lastest .
+        run: docker build -t $IMAGE_NAME:latest .
 
       - name: Automatic Tagging of Releases
         id: increment-git-tag
