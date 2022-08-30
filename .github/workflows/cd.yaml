@@ -49,7 +49,7 @@ jobs:
         id: increment-git-tag
         run: |
           cd ../.github/workflows 
-          bash ./scripts/git_update.sh -v ${{ inputs.version }}
+          bash git_update.sh -v ${{ inputs.version }}
 
       - name: Push Docker Image to GCR
         env:
