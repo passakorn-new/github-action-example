@@ -65,7 +65,7 @@ jobs:
         run: bundle exec rails test
 
       - name: Verify Build docker
-        run: docker build -t api:lastest .
+        run: docker build -t api:latest .
 
   build_web:
     runs-on: ubuntu-latest
@@ -107,4 +107,4 @@ jobs:
           pnpm build
 
       - name: Verify Build docker
-        run: docker build -t web:lastest .
+        run: docker build -t web:latest .
