@@ -83,6 +83,7 @@ jobs:
 
       - name: Push Docker Image to GCR
         env:
+          PROJECT_ID: github-action-361002
           IMAGE_NAME: api
           GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
         run: |-
