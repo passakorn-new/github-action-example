@@ -1,7 +1,6 @@
 FROM ruby:3.1.2
 WORKDIR /api
 
-RUN apk add --no-cache build-base git postgresql-dev tzdata libc6-compat pkgconfig
 RUN gem install bundler && gem update --system
 
 COPY Gemfile .
