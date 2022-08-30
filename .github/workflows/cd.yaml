@@ -1,29 +1,33 @@
 name: CD Rails & Svelte
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        type: choice
-        description: Version for increase tag
-        required: true
-        options:
-          - major
-          - minor
-          - patch
-      environment:
-        description: Environment to run CD
-        type: choice
-        required: true
-        options:
-          - stg
-          - prod
+  push:
+    branches:
+      - "releases-**"
+      - "main"
+  # workflow_dispatch:
+  #   inputs:
+  #     version:
+  #       type: choice
+  #       description: Version for increase tag
+  #       required: true
+  #       options:
+  #         - major
+  #         - minor
+  #         - patch
+  #     environment:
+  #       description: Environment to run CD
+  #       type: choice
+  #       required: true
+  #       options:
+  #         - stg
+  #         - prod
 
 jobs:
   build_api_push_gcr_stg:
     name: Build and Push to GCP
-    if: ${{ inputs.environment == 'stg' }}
-    runs-on: ubuntu-16.04
+    # if: ${{ inputs.environment == 'stg' }}
+    runs-on: ubuntu-lastest
     env:
       IMAGE_NAME: api-stg
       PROJECT_ID: github-action-361002
@@ -42,15 +46,15 @@ jobs:
       - name: Build Docker image
         run: docker build -t $IMAGE_NAME:lastest .
 
-      - name: Automatic Tagging of Releases
-        id: increment-git-tag
-        run: bash ./scripts/git_update.sh -v ${{ inputs.version }}
+      # - name: Automatic Tagging of Releases
+      #   id: increment-git-tag
+      #   run: bash ./scripts/git_update.sh -v ${{ inputs.version }}
 
-      - name: Push Docker Image to GCR
-        env:
-          GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
-        run: |-
-          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-          docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
-          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
-          docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+      # - name: Push Docker Image to GCR
+      #   env:
+      #     GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+      #   run: |-
+      #     docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+      #     docker tag $IMAGE_NAME:latest gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
+      #     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
+      #     docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
