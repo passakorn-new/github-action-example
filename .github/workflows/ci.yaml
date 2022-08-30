@@ -1,4 +1,4 @@
-name: CD Rails & Svelte
+name: CI Rails & Svelte
 
 on:
   push:
