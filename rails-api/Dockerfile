@@ -1,4 +1,4 @@
-FROM ruby:3.1.2-alpine
+FROM ruby:3.1.2
 WORKDIR /api
 
 RUN apk add --no-cache build-base git postgresql-dev tzdata libc6-compat pkgconfig
