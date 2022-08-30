@@ -45,6 +45,10 @@ jobs:
       - name: Build Docker image
         run: docker build -t $IMAGE_NAME:latest .
 
+      - name: Configure Docker Client
+        run: |
+          gcloud auth confifure-docker --quiet
+
       - name: Automatic Tagging of Releases
         id: increment-git-tag
         run: |
